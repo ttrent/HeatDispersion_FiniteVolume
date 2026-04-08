@@ -5,7 +5,7 @@ def heat_flux(u_left, u_right, dx, alpha):
     return -alpha * (u_right - u_left) / dx
 
 
-def linear_initial_condition(x, start=1.0, end=2.0, length=1.0):
+def linear_initial_condition(x, start=1.0, end=1.0, length=1.0):
     """Return a linear temperature gradient from start to end over the domain."""
     return start + (end - start) * x / length
 
