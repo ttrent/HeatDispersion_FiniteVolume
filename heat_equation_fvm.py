@@ -1,6 +1,11 @@
 import numpy as np
 
 
+def linear_initial_condition(x, start=1.0, end=2.0, length=1.0):
+    """Return a linear temperature gradient from start to end over the domain."""
+    return start + (end - start) * x / length
+
+
 def solve_heat_equation_fvm(
     nx=50,
     nt=500,
