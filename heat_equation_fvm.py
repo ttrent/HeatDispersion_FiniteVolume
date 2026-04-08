@@ -65,9 +65,9 @@ def solve_heat_equation_fvm(
             u_ext[1:-1] = u
             u_ext[-1] = right_bc
 
-        flux = flux(u_ext[:-1], u_ext[1:], dx, alpha)
+        face_fluxes = flux(u_ext[:-1], u_ext[1:], dx, alpha)
 
-        dudt = -(flux[1:] - flux[:-1]) / dx
+        dudt = -(face_fluxes[1:] - face_fluxes[:-1]) / dx
         u = u + dt * dudt
 
         solutions.append(u.copy())
