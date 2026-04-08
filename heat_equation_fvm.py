@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def heat_flux(u_left, u_right, dx, alpha):
     """Compute the diffusive heat flux between adjacent cell values."""
     return -alpha * (u_right - u_left) / dx
@@ -20,8 +19,8 @@ def solve_heat_equation_fvm(
     left_bc=0.0,
     right_bc=0.0,
     periodic=False,
-    flux=None,
-    initial_condition=None,
+    flux=heat_flux,
+    initial_condition=linear_initial_condition,
 ):
     """Solve the 1D heat equation using a finite volume method.
 
@@ -32,12 +31,10 @@ def solve_heat_equation_fvm(
     initial_condition must be a callable that returns the field values at cell centers.
     flux must be a callable in this file that computes the diffusive flux.
     """
-    if initial_condition is None or not callable(initial_condition):
-        raise ValueError("initial_condition must be a callable function of x values.")
-    if flux is None:
-        flux = heat_flux
     if not callable(flux):
-        raise ValueError("flux must be a callable function of adjacent cell values.")
+        raise ValueError("flux must be a callable function.")
+    if not callable(initial_condition):
+        raise ValueError("initial_condition must be a callable function.")
 
     dx = length / nx
     x_centers = (np.arange(nx) + 0.5) * dx
