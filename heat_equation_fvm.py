@@ -5,12 +5,25 @@ def heat_flux(u_left, u_right, dx, alpha):
     return -alpha * (u_right - u_left) / dx
 
 
+def saturated_heat_flux(u_left, u_right, dx, alpha, q_sat=1.0, grad_crit=1.0):
+    """Compute a saturated heat flux with a critical gradient.
+
+    If the temperature gradient magnitude exceeds grad_crit, the flux is clipped
+    to the saturated heat flux magnitude q_sat.
+    """
+    raw_flux = -alpha * (u_right - u_left) / dx
+    max_flux = np.sign(raw_flux) * q_sat
+    capped_flux = np.clip(raw_flux, -abs(max_flux), abs(max_flux))
+
+    return np.where(np.abs(raw_flux) > grad_crit, max_flux, capped_flux)
+
+
 def linear_initial_condition(x, start=1.0, end=2.0, length=1.0):
     """Return a linear temperature gradient from start to end over the domain."""
     return start + (end - start) * x / length
 
 
-def flat_initial_condition(x, value=0.0):
+def flat_initial_condition(x, value=1.0):
     """Return a flat (constant) initial condition."""
     return np.full_like(x, value)
 
