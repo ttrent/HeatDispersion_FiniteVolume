@@ -9,12 +9,14 @@ def solve_heat_equation_fvm(
     alpha=1.0,
     left_bc=0.0,
     right_bc=0.0,
+    periodic=False,
     initial_condition=None,
 ):
     """Solve the 1D heat equation using a finite volume method.
 
     The equation is u_t = alpha * u_xx on 0 < x < length.
-    Dirichlet boundary conditions are imposed at x=0 and x=length.
+    By default, Dirichlet boundary conditions are imposed at x=0 and x=length.
+    Set periodic=True to use periodic boundary conditions instead.
     """
     dx = length / nx
     x_centers = (np.arange(nx) + 0.5) * dx
@@ -29,8 +31,6 @@ def solve_heat_equation_fvm(
         initial_condition = lambda x: np.sin(np.pi * x / length)
 
     u = initial_condition(x_centers)
-    u_left = left_bc
-    u_right = right_bc
 
     solutions = [u.copy()]
     times = [0.0]
@@ -38,9 +38,14 @@ def solve_heat_equation_fvm(
     for n in range(1, nt + 1):
         # Compute face fluxes for each cell interface
         u_ext = np.empty(nx + 2)
-        u_ext[0] = u_left
-        u_ext[1:-1] = u
-        u_ext[-1] = u_right
+        if periodic:
+            u_ext[0] = u[-1]
+            u_ext[1:-1] = u
+            u_ext[-1] = u[0]
+        else:
+            u_ext[0] = left_bc
+            u_ext[1:-1] = u
+            u_ext[-1] = right_bc
 
         flux = -alpha * (u_ext[1:] - u_ext[:-1]) / dx
 
