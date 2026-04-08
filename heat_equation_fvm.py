@@ -1,0 +1,53 @@
+import numpy as np
+
+
+def solve_heat_equation_fvm(
+    nx=50,
+    nt=500,
+    t_end=0.1,
+    length=1.0,
+    alpha=1.0,
+    left_bc=0.0,
+    right_bc=0.0,
+    initial_condition=None,
+):
+    """Solve the 1D heat equation using a finite volume method.
+
+    The equation is u_t = alpha * u_xx on 0 < x < length.
+    Dirichlet boundary conditions are imposed at x=0 and x=length.
+    """
+    dx = length / nx
+    x_centers = (np.arange(nx) + 0.5) * dx
+    dt = t_end / nt
+    stability_limit = dx**2 / (2 * alpha)
+    if dt > stability_limit:
+        raise ValueError(
+            f"Time step dt={dt:.4e} exceeds explicit stability limit {stability_limit:.4e}."
+        )
+
+    if initial_condition is None:
+        initial_condition = lambda x: np.sin(np.pi * x / length)
+
+    u = initial_condition(x_centers)
+    u_left = left_bc
+    u_right = right_bc
+
+    solutions = [u.copy()]
+    times = [0.0]
+
+    for n in range(1, nt + 1):
+        # Compute face fluxes for each cell interface
+        u_ext = np.empty(nx + 2)
+        u_ext[0] = u_left
+        u_ext[1:-1] = u
+        u_ext[-1] = u_right
+
+        flux = -alpha * (u_ext[1:] - u_ext[:-1]) / dx
+
+        dudt = -(flux[1:] - flux[:-1]) / dx
+        u = u + dt * dudt
+
+        solutions.append(u.copy())
+        times.append(n * dt)
+
+    return x_centers, np.array(times), np.array(solutions)
