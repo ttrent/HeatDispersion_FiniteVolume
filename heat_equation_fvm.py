@@ -13,11 +13,11 @@ def saturated_heat_flux(u_left, u_right, dx, kappa,  grad_crit=1.0, alpha=1.0):
     """
     grad = (u_right - u_left) / dx
     grad_mag = np.abs(grad)
-    
     linear_flux = -kappa * grad
     
-    q_sat = kappa * grad_crit
-    exponential_flux = (1 - q_sat) * np.power( grad_mag / grad_crit, -alpha) + q_sat
+    q_crit = kappa * grad_crit
+    q_sat = kappa * 0.8 * grad_crit
+    exponential_flux = (q_crit - q_sat) * np.power( grad_mag / grad_crit, -alpha) + q_sat
     exponential_flux *= -np.sign(grad) 
 
     return np.where(grad_mag < grad_crit, linear_flux, exponential_flux)
@@ -42,7 +42,7 @@ def solve_heat_equation_fvm(
     left_bc=0.0,
     right_bc=0.0,
     periodic=False,
-    flux=heat_flux,
+    flux=saturated_heat_flux,
     initial_condition=linear_initial_condition,
 ):
     """Solve the 1D heat equation using a finite volume method.
@@ -85,15 +85,14 @@ def solve_heat_equation_fvm(
             u_ext[1:-1] = u
             u_ext[-1] = right_bc
 
-        face_fluxes = flux(u_ext[:-1], u_ext[1:], dx, kappa)
+        # Face distances: dx/2 for boundaries, dx for interior
+        dx_faces = np.full(nx + 1, dx)
+        dx_faces[0] = dx / 2
+        dx_faces[-1] = dx / 2
 
+        face_fluxes = flux(u_ext[:-1], u_ext[1:], dx_faces, kappa)
         dudt = -(face_fluxes[1:] - face_fluxes[:-1]) / dx
         u = u + dt * dudt
-
-        # Enforce boundary conditions
-        if not periodic:
-            u[0] = left_bc
-            u[-1] = right_bc
 
         solutions.append(u.copy())
         times.append(n * dt)
