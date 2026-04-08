@@ -90,6 +90,11 @@ def solve_heat_equation_fvm(
         dudt = -(face_fluxes[1:] - face_fluxes[:-1]) / dx
         u = u + dt * dudt
 
+        # Enforce boundary conditions
+        if not periodic:
+            u[0] = left_bc
+            u[-1] = right_bc
+
         solutions.append(u.copy())
         times.append(n * dt)
 
