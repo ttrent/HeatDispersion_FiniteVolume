@@ -1,6 +1,11 @@
 import numpy as np
 
 
+def heat_flux(u_left, u_right, dx, alpha):
+    """Compute the diffusive heat flux between adjacent cell values."""
+    return -alpha * (u_right - u_left) / dx
+
+
 def linear_initial_condition(x, start=1.0, end=2.0, length=1.0):
     """Return a linear temperature gradient from start to end over the domain."""
     return start + (end - start) * x / length
@@ -15,6 +20,7 @@ def solve_heat_equation_fvm(
     left_bc=0.0,
     right_bc=0.0,
     periodic=False,
+    flux=None,
     initial_condition=None,
 ):
     """Solve the 1D heat equation using a finite volume method.
@@ -24,9 +30,14 @@ def solve_heat_equation_fvm(
     Set periodic=True to use periodic boundary conditions instead.
 
     initial_condition must be a callable that returns the field values at cell centers.
+    flux must be a callable in this file that computes the diffusive flux.
     """
     if initial_condition is None or not callable(initial_condition):
         raise ValueError("initial_condition must be a callable function of x values.")
+    if flux is None:
+        flux = heat_flux
+    if not callable(flux):
+        raise ValueError("flux must be a callable function of adjacent cell values.")
 
     dx = length / nx
     x_centers = (np.arange(nx) + 0.5) * dx
@@ -54,7 +65,7 @@ def solve_heat_equation_fvm(
             u_ext[1:-1] = u
             u_ext[-1] = right_bc
 
-        flux = -alpha * (u_ext[1:] - u_ext[:-1]) / dx
+        flux = flux(u_ext[:-1], u_ext[1:], dx, alpha)
 
         dudt = -(flux[1:] - flux[:-1]) / dx
         u = u + dt * dudt
