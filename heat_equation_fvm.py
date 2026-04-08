@@ -1,17 +1,17 @@
 import numpy as np
 
-def heat_flux(u_left, u_right, dx, alpha):
+def heat_flux(u_left, u_right, dx, kappa):
     """Compute the diffusive heat flux between adjacent cell values."""
-    return -alpha * (u_right - u_left) / dx
+    return -kappa * (u_right - u_left) / dx
 
 
-def saturated_heat_flux(u_left, u_right, dx, alpha, q_sat=1.0, grad_crit=1.0):
+def saturated_heat_flux(u_left, u_right, dx, kappa, q_sat=1.0, grad_crit=1.0):
     """Compute a saturated heat flux with a critical gradient.
 
     If the temperature gradient magnitude exceeds grad_crit, the flux is clipped
     to the saturated heat flux magnitude q_sat.
     """
-    raw_flux = -alpha * (u_right - u_left) / dx
+    raw_flux = -kappa * (u_right - u_left) / dx
     max_flux = np.sign(raw_flux) * q_sat
     capped_flux = np.clip(raw_flux, -abs(max_flux), abs(max_flux))
 
@@ -33,7 +33,7 @@ def solve_heat_equation_fvm(
     nt=500,
     t_end=0.1,
     length=1.0,
-    alpha=1.0,
+    kappa=1.0,
     left_bc=0.0,
     right_bc=0.0,
     periodic=False,
@@ -42,7 +42,7 @@ def solve_heat_equation_fvm(
 ):
     """Solve the 1D heat equation using a finite volume method.
 
-    The equation is u_t = alpha * u_xx on 0 < x < length.
+    The equation is u_t = kappa * u_xx on 0 < x < length.
     By default, Dirichlet boundary conditions are imposed at x=0 and x=length.
     Set periodic=True to use periodic boundary conditions instead.
 
@@ -57,7 +57,7 @@ def solve_heat_equation_fvm(
     dx = length / nx
     x_centers = (np.arange(nx) + 0.5) * dx
     dt = t_end / nt
-    stability_limit = dx**2 / (2 * alpha)
+    stability_limit = dx**2 / (2 * kappa)
     if dt > stability_limit:
         raise ValueError(
             f"Time step dt={dt:.4e} exceeds explicit stability limit {stability_limit:.4e}."
@@ -80,7 +80,7 @@ def solve_heat_equation_fvm(
             u_ext[1:-1] = u
             u_ext[-1] = right_bc
 
-        face_fluxes = flux(u_ext[:-1], u_ext[1:], dx, alpha)
+        face_fluxes = flux(u_ext[:-1], u_ext[1:], dx, kappa)
 
         dudt = -(face_fluxes[1:] - face_fluxes[:-1]) / dx
         u = u + dt * dudt
