@@ -17,7 +17,12 @@ def solve_heat_equation_fvm(
     The equation is u_t = alpha * u_xx on 0 < x < length.
     By default, Dirichlet boundary conditions are imposed at x=0 and x=length.
     Set periodic=True to use periodic boundary conditions instead.
+
+    initial_condition must be a callable that returns the field values at cell centers.
     """
+    if initial_condition is None or not callable(initial_condition):
+        raise ValueError("initial_condition must be a callable function of x values.")
+
     dx = length / nx
     x_centers = (np.arange(nx) + 0.5) * dx
     dt = t_end / nt
@@ -26,9 +31,6 @@ def solve_heat_equation_fvm(
         raise ValueError(
             f"Time step dt={dt:.4e} exceeds explicit stability limit {stability_limit:.4e}."
         )
-
-    if initial_condition is None:
-        initial_condition = lambda x: np.sin(np.pi * x / length)
 
     u = initial_condition(x_centers)
 
