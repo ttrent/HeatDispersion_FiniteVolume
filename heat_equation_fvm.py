@@ -5,6 +5,12 @@ def heat_flux(u_left, u_right, dx, kappa):
     return -kappa * (u_right - u_left) / dx
 
 
+def exponential_heat_flux(u_left, u_right, dx, kappa, alpha=-1.0):
+    """Compute a nonlinear diffusive flux with gradient magnitude exponent alpha."""
+    grad = (u_right - u_left) / dx
+    return -kappa * np.sign(grad) * np.power(np.abs(grad) + 1e-12, alpha)
+
+
 def saturated_heat_flux(u_left, u_right, dx, kappa,  grad_crit=1.0, alpha=1.0):
     """Compute a saturated heat flux with a critical gradient.
 
@@ -13,6 +19,7 @@ def saturated_heat_flux(u_left, u_right, dx, kappa,  grad_crit=1.0, alpha=1.0):
     """
     grad = (u_right - u_left) / dx
     grad_mag = np.abs(grad)
+    
     linear_flux = -kappa * grad
     
     q_crit = kappa * grad_crit
@@ -31,6 +38,11 @@ def linear_initial_condition(x, start=1.0, end=2.0, length=1.0):
 def flat_initial_condition(x, value=1.0):
     """Return a flat (constant) initial condition."""
     return np.full_like(x, value)
+
+
+def sinusoidal_initial_condition(x, amplitude=2.0, phase=0.0, offset=5.0, length=1.0, modes=3):
+    """Return a sinusoidal initial condition on the domain [0, length]."""
+    return offset + amplitude * np.sin(2 * np.pi * modes * x / length + phase)
 
 
 def solve_heat_equation_fvm(
@@ -80,15 +92,18 @@ def solve_heat_equation_fvm(
             u_ext[0] = u[-1]
             u_ext[1:-1] = u
             u_ext[-1] = u[0]
+
+            # For periodic boundaries, all faces are separated by a full cell width.
+            dx_faces = np.full(nx + 1, dx)
         else:
             u_ext[0] = left_bc
             u_ext[1:-1] = u
             u_ext[-1] = right_bc
 
-        # Face distances: dx/2 for boundaries, dx for interior
-        dx_faces = np.full(nx + 1, dx)
-        dx_faces[0] = dx / 2
-        dx_faces[-1] = dx / 2
+            # Face distances: dx/2 for boundary faces, dx for interior.
+            dx_faces = np.full(nx + 1, dx)
+            dx_faces[0] = dx / 2
+            dx_faces[-1] = dx / 2
 
         face_fluxes = flux(u_ext[:-1], u_ext[1:], dx_faces, kappa)
         dudt = -(face_fluxes[1:] - face_fluxes[:-1]) / dx
