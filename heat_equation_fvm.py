@@ -18,7 +18,7 @@ def exponential_heat_flux(u_left, u_right, dx, kappa, alpha=-1.0):
     return -kappa * np.sign(grad) * np.power(grad_mag, alpha)
 
 
-def saturated_heat_flux(u_left, u_right, dx, kappa,  grad_crit=10.0, alpha=-1.0):
+def saturated_heat_flux(u_left, u_right, dx, kappa,  grad_crit=6.0, alpha=-1.0):
     """Compute a saturated heat flux with a critical gradient.
 
     If the temperature gradient magnitude exceeds grad_crit, the flux is clipped
