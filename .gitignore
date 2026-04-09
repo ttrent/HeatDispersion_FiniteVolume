@@ -22,3 +22,10 @@ coverage.xml
 .hypothesis
 .vscode/
 frames/
+
+# Generated movies
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
