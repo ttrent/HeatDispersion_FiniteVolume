@@ -30,7 +30,7 @@ def saturated_heat_flux(u_left, u_right, dx, kappa,  grad_crit=6.0, alpha=-1.0):
     linear_flux = -kappa * grad
     
     q_crit = kappa * grad_crit
-    q_sat = kappa * 0.1 * grad_crit
+    q_sat = kappa * 0.7 * grad_crit
     exponential_flux = (q_crit - q_sat) * np.power( grad_mag / grad_crit, alpha) + q_sat
     exponential_flux *= -np.sign(grad) 
 
